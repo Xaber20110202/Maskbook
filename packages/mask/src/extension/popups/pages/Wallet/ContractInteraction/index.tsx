@@ -258,7 +258,8 @@ const ContractInteraction = memo(() => {
     const [{ loading }, handleConfirm] = useAsyncFn(async () => {
         if (request) {
             try {
-                await Services.Ethereum.confirmRequest(request.payload)
+                // await Services.Ethereum.confirmRequest(request.payload)
+                await Services.Ethereum.confirmRequest()
                 history.goBack()
             } catch (error_) {
                 setTransferError(true)
@@ -269,7 +270,8 @@ const ContractInteraction = memo(() => {
 
     const [{ loading: rejectLoading }, handleReject] = useAsyncFn(async () => {
         if (!request) return
-        await Services.Ethereum.rejectRequest(request.payload)
+        // await Services.Ethereum.rejectRequest(request.payload)
+        await Services.Ethereum.rejectRequest()
         history.replace(PopupRoutes.Wallet)
     }, [request])
 

@@ -21,16 +21,16 @@ function isEmptyHex(hex: string) {
     return !hex || ['0x', '0x0'].includes(hex)
 }
 
-function getData(tx: TransactionConfig) {
-    const { data } = tx
+function getData(config: TransactionConfig) {
+    const { data } = config
     if (!data) return
     if (isEmptyHex(data)) return
     if (!data.startsWith('0x')) return `0x${data}`
     return data
 }
 
-function getTo(tx: TransactionConfig) {
-    const { to } = tx
+function getTo(config: TransactionConfig) {
+    const { to } = config
     if (!to) return ZERO_ADDRESS
     if (isEmptyHex(to)) return ZERO_ADDRESS
     return to

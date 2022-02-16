@@ -205,16 +205,6 @@ export async function signTransaction(config: TransactionConfig, overrides?: Sen
     )
 }
 
-export async function sendTransaction(config: TransactionConfig, overrides?: SendOverrides) {
-    return request<string>(
-        {
-            method: EthereumMethodType.ETH_SEND_TRANSACTION,
-            params: [config],
-        },
-        overrides,
-    )
-}
-
 export async function getPastLogs(config: PastLogsOptions, overrides?: SendOverrides) {
     return new Promise<Log[]>((resolve, reject) =>
         request<Log[]>(
@@ -228,3 +218,31 @@ export async function getPastLogs(config: PastLogsOptions, overrides?: SendOverr
             .catch(() => resolve([])),
     )
 }
+
+export async function watchTransaction(hash: string, config: TransactionConfig, overrides?: SendOverrides) {
+    return request<void>(
+        {
+            method: EthereumMethodType.MASK_WATCH_TRANSACTION,
+            params: [hash, config],
+        },
+        overrides,
+    )
+}
+
+export async function unwatchTransaction(hash: string, overrides?: SendOverrides) {
+    return request<void>(
+        {
+            method: EthereumMethodType.MASK_UNWATCH_TRANSACTION,
+            params: [hash],
+        },
+        overrides,
+    )
+}
+
+export async function confirmRequest() {}
+
+export async function rejectRequest() {}
+
+export async function replaceRequest() {}
+
+export async function cancelRequest() {}

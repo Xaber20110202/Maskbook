@@ -154,15 +154,17 @@ const ReplaceTransaction = memo(() => {
                     }))
 
                     if (type === ReplaceType.CANCEL) {
-                        await Services.Ethereum.cancelRequest(transaction.hash, {
-                            ...transaction.payload,
-                            params: config,
-                        })
+                        // await Services.Ethereum.cancelRequest(transaction.hash, {
+                        //     ...transaction.payload,
+                        //     params: config,
+                        // })
+                        await Services.Ethereum.cancelRequest()
                     } else {
-                        await Services.Ethereum.replaceRequest(transaction.hash, {
-                            ...transaction.payload,
-                            params: config,
-                        })
+                        // await Services.Ethereum.replaceRequest(transaction.hash, {
+                        //     ...transaction.payload,
+                        //     params: config,
+                        // })
+                        await Services.Ethereum.replaceRequest()
                     }
 
                     history.goBack()

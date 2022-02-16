@@ -114,7 +114,8 @@ const SignRequest = memo(() => {
     const [{ loading }, handleConfirm] = useAsyncFn(async () => {
         if (value) {
             try {
-                await Services.Ethereum.confirmRequest(value.payload)
+                // await Services.Ethereum.confirmRequest(value.payload)
+                await Services.Ethereum.confirmRequest()
             } catch (error_) {
                 setTransferError(true)
             }
@@ -123,7 +124,8 @@ const SignRequest = memo(() => {
 
     const [{ loading: rejectLoading }, handleReject] = useAsyncFn(async () => {
         if (!value) return
-        await Services.Ethereum.rejectRequest(value.payload)
+        // await Services.Ethereum.rejectRequest(value.payload)
+        await Services.Ethereum.rejectRequest()
         history.replace(PopupRoutes.Wallet)
     }, [value])
 

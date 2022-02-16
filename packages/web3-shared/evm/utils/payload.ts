@@ -2,21 +2,39 @@ import { first } from 'lodash-unified'
 import type { JsonRpcPayload, JsonRpcResponse } from 'web3-core-helpers'
 import { EthereumMethodType, EthereumTransactionConfig } from '../types'
 
-export function getPayloadChainId(payload: JsonRpcPayload) {
-    switch (payload.method) {
-        // here are methods that contracts may emit
-        case EthereumMethodType.ETH_CALL:
-        case EthereumMethodType.ETH_ESTIMATE_GAS:
-        case EthereumMethodType.ETH_SEND_TRANSACTION:
-            const config = first(payload.params) as { chainId?: string } | undefined
-            return typeof config?.chainId === 'string' ? Number.parseInt(config.chainId, 16) || undefined : undefined
-        default:
-            return
+export function createPayload(id: number, method: string, params: any[]) {
+    return {
+        id,
+        jsonrpc: '2.0',
+        method,
+        params,
     }
+}
+
+export function getPayloadId(payload: JsonRpcPayload) {
+    return typeof payload.id === 'string' ? Number.parseInt(payload.id, 10) : payload.id
+}
+
+export function getPayloadFrom(payload: JsonRpcPayload) {
+    const config = getPayloadConfig(payload)
+    return config?.from as string | undefined
+}
+
+export function getPayloadTo(payload: JsonRpcPayload) {
+    const config = getPayloadConfig(payload)
+    return config?.to as string | undefined
+}
+
+export function getPayloadChainId(payload: JsonRpcPayload) {
+    const config = getPayloadConfig(payload)
+    return typeof config?.chainId === 'string' ? Number.parseInt(config.chainId, 16) || undefined : undefined
 }
 
 export function getPayloadConfig(payload: JsonRpcPayload) {
     switch (payload.method) {
+        case EthereumMethodType.ETH_CALL:
+        case EthereumMethodType.ETH_ESTIMATE_GAS:
+        case EthereumMethodType.ETH_SIGN_TRANSACTION:
         case EthereumMethodType.ETH_SEND_TRANSACTION: {
             const [config] = payload.params as [EthereumTransactionConfig]
             return config
@@ -47,12 +65,4 @@ export function getPayloadHash(payload: JsonRpcPayload) {
 export function getPayloadNonce(payload: JsonRpcPayload) {
     const config = getPayloadConfig(payload)
     return config?.nonce
-}
-
-export function getTransactionHash(response?: JsonRpcResponse) {
-    if (!response) return ''
-    const hash = response?.result as string | undefined
-    if (typeof hash !== 'string') return ''
-    if (!/^0x([\dA-Fa-f]{64})$/.test(hash)) return ''
-    return hash
 }

@@ -1,5 +1,6 @@
-import type { TransactionConfig as TransactionConfig_ } from 'web3-core'
+import type { RequestArguments, TransactionConfig as TransactionConfig_ } from 'web3-core'
 import type { NonPayableTransactionObject, PayableTransactionObject } from '@masknet/web3-contracts/types/types'
+import type { JsonRpcPayload, JsonRpcResponse } from 'web3-core-helpers'
 
 export interface SendOverrides {
     chainId?: ChainId
@@ -9,6 +10,18 @@ export interface SendOverrides {
 
 export interface RequestOptions {
     popupsWindow?: boolean
+}
+
+export interface ExternalProvider {
+    request: <T>(requestArguments: RequestArguments) => Promise<T>
+    send?: (
+        payload: JsonRpcPayload,
+        callback: (error: Error | null, response?: JsonRpcResponse | undefined) => void,
+    ) => void
+    sendAsync: (
+        payload: JsonRpcPayload,
+        callback: (error: Error | null, response?: JsonRpcResponse | undefined) => void,
+    ) => void
 }
 
 export enum CurrencyType {
@@ -364,6 +377,8 @@ export enum EthereumMethodType {
     ETH_GET_ENCRYPTION_PUBLIC_KEY = 'eth_getEncryptionPublicKey',
 
     // only for mask
+    MASK_WATCH_TRANSACTION = 'mask_watchTransaction',
+    MASK_UNWATCH_TRANSACTION = 'mask_unwatchTransaction',
     MASK_GET_TRANSACTION_RECEIPT = 'mask_getTransactionReceipt',
     MASK_REPLACE_TRANSACTION = 'mask_replaceTransaction',
     MASK_LOGIN_FORTMATIC = 'mask_loginFortmatic',
@@ -380,6 +395,11 @@ export type EthereumTransactionConfig = TransactionConfig_ & {
     // EIP1559
     maxFeePerGas?: string
     maxPriorityFeePerGas?: string
+
+    // CELO
+    feeCurrency?: string // address of the ERC20 contract to use to pay for gas and the gateway fee
+    gatewayFeeRecipient?: string // coinbase address of the full serving the light client's transactions
+    gatewayFee?: string // value paid to the gateway fee recipient, denominated in the fee currency
 }
 
 // RPC need to be confirmed by the user
