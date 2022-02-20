@@ -17,8 +17,7 @@
     { "path": "./packages/encryption/tsconfig.tests.json" },
     { "path": "./packages/shared-base/tsconfig.tests.json" },
     // All plugins should be type checked too
-    { "path": "./packages/plugins" },
-    { "path": "./packages/utils" }
+    { "path": "./packages/plugins" }
   ],
   "compilerOptions": {
     "paths": {
