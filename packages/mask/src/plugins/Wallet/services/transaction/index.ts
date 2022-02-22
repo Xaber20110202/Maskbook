@@ -1,6 +1,6 @@
 import type { TransactionReceipt } from 'web3-core'
 import type { JsonRpcPayload } from 'web3-core-helpers'
-import { ChainId, getPayloadConfig, TransactionStatusType } from '@masknet/web3-shared-evm'
+import { ChainId, getPayloadConfig, getReceiptStatus, TransactionStatusType } from '@masknet/web3-shared-evm'
 import {
     getSendTransactionComputedPayload,
     getTransactionReceipt,
@@ -8,7 +8,6 @@ import {
     unwatchTransaction,
 } from '../../../../extension/background-script/EthereumService'
 import * as database from './database'
-import * as helpers from './helpers'
 
 export interface RecentTransactionOptions {
     status?: TransactionStatusType
@@ -70,7 +69,7 @@ export async function getRecentTransactions(
                 at,
                 hash,
                 payload,
-                status: helpers.getReceiptStatus(null),
+                status: getReceiptStatus(null),
                 receipt: null,
             }
             const pairs = [
