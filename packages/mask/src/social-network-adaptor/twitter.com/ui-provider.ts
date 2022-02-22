@@ -25,7 +25,7 @@ import { createTaskStartSetupGuideDefault } from '../../social-network/defaults/
 import { injectMaskUserBadgeAtTwitter } from './injection/MaskIcon'
 import { pasteImageToCompositionDefault } from '../../social-network/defaults/automation/AttachImageToComposition'
 import { injectPostInspectorAtTwitter } from './injection/PostInspector'
-import { ProfileIdentifier } from '@masknet/shared-base'
+import { isTypedMessageText, NextIDPlatform, ProfileIdentifier } from '@masknet/shared-base'
 import { unreachable } from '@dimensiondev/kit'
 import { makeStyles } from '@masknet/theme'
 import { injectNFTAvatarInTwitter } from './injection/NFT/NFTAvatarInTwitter'
@@ -35,6 +35,9 @@ import { injectOpenNFTAvatarEditProfileButton } from './injection/NFT/NFTAvatarE
 import { injectUserNFTAvatarAtTweet } from './injection/NFT/TweetNFTAvatar'
 import { injectNFTContractAtTwitter } from './injection/NFT/NFTContract'
 import { injectNFTAvatarClipInTwitter } from './injection/NFT/NFTAvatarClip'
+import { timeLinePostContentSelector } from './utils/selector'
+import { postContentMessageParser, postIdParser } from './utils/fetch'
+import { forEach } from 'lodash-unified'
 
 const useInjectedDialogClassesOverwriteTwitter = makeStyles()((theme) => {
     const smallQuery = `@media (max-width: ${theme.breakpoints.values.sm}px)`
@@ -182,6 +185,27 @@ const twitterUI: SocialNetworkUI.Definition = {
     configuration: {
         nextIDConfig: {
             enable: true,
+            platform: NextIDPlatform.Twitter,
+            collectVerifyPost: (keyword: string) => {
+                let verifiedPostId: string | null = null
+                const regex = new RegExp(/myself121/)
+                const postNodes = timeLinePostContentSelector().evaluate()
+
+                forEach(postNodes, (x) => {
+                    const postId = postIdParser(x)
+                    const postContent = postContentMessageParser(x)
+                    const isVerified =
+                        postId &&
+                        postContent[0] &&
+                        isTypedMessageText(postContent[0]) &&
+                        (postContent[0]?.content ?? '').toLowerCase() === keyword.toLowerCase()
+
+                    if (isVerified) {
+                        verifiedPostId = postId
+                    }
+                })
+                return verifiedPostId
+            },
         },
         steganography: {
             password() {
@@ -196,4 +220,5 @@ const twitterUI: SocialNetworkUI.Definition = {
         },
     },
 }
+
 export default twitterUI

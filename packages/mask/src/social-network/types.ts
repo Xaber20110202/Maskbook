@@ -305,6 +305,8 @@ export namespace SocialNetworkUI {
         }
         export interface NextIDConfig {
             enable?: boolean
+            platform: string
+            collectVerifyPost: (keyword: string) => string | null
         }
     }
 }
