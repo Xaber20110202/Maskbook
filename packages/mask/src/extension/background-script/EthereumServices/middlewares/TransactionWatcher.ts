@@ -19,7 +19,6 @@ import { WalletRPC } from '../../../../plugins/Wallet/messages'
 
 interface StorageItem {
     at: number
-    limits: number
     payload: JsonRpcPayload
     receipt: Promise<TransactionReceipt | null> | null
 }
@@ -56,9 +55,7 @@ class Storage {
     }
 
     public getWatched(chainId: ChainId) {
-        return this.getItems(chainId)
-            .filter(([_, item]) => item.limits > 0)
-            .slice(0, Storage.MAX_ITEM_SIZE)
+        return this.getItems(chainId).slice(0, Storage.MAX_ITEM_SIZE)
     }
 
     public getUnwatched(chainId: ChainId) {
@@ -85,7 +82,6 @@ class Storage {
 }
 
 export class TransactionWatcher implements Middleware<Context> {
-    static CHECK_TIMES = 30
     static CHECK_DELAY = 30 * 1000 // seconds
     static LATEST_TRANSACTION_SIZE = 5
 
@@ -163,10 +159,7 @@ export class TransactionWatcher implements Middleware<Context> {
 
         // update limits
         this.storage.getWatched(chainId).forEach(([hash, transaction]) => {
-            this.storage.setItem(chainId, hash, {
-                ...transaction,
-                limits: Math.max(0, transaction.limits - 1),
-            })
+            this.storage.setItem(chainId, hash, transaction)
         })
 
         try {
@@ -186,7 +179,7 @@ export class TransactionWatcher implements Middleware<Context> {
         this.startCheck(true)
     }
 
-    private startCheck(force: boolean) {
+    private startCheck(force = false) {
         if (force) this.stopCheck()
         if (this.timer === null) {
             this.timer = setTimeout(this.check.bind(this, currentChainIdSettings.value), TransactionWatcher.CHECK_DELAY)
@@ -198,16 +191,15 @@ export class TransactionWatcher implements Middleware<Context> {
         this.timer = null
     }
 
-    private async watchTransaction(chainId: ChainId, hash: string, payload: JsonRpcPayload) {
+    private watchTransaction(chainId: ChainId, hash: string, payload: JsonRpcPayload) {
         if (!this.storage.hasItem(chainId, hash)) {
             this.storage.setItem(chainId, hash, {
                 at: Date.now(),
                 payload,
-                limits: TransactionWatcher.CHECK_TIMES,
                 receipt: Promise.resolve(null),
             })
         }
-        this.startCheck(false)
+        this.startCheck()
     }
 
     private unwatchTransaction(chainId: ChainId, hash: string) {

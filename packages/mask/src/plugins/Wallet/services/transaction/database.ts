@@ -11,7 +11,7 @@ export interface RecentTransaction {
     at: Date
     hash: string
     payload: JsonRpcPayload
-    replacements?: Record<string, JsonRpcPayload>
+    candidates: Record<string, JsonRpcPayload>
 }
 
 export interface RecentTransactionChunk {
@@ -43,6 +43,9 @@ export async function addRecentTransaction(chainId: ChainId, address: string, ha
                     at: now,
                     hash,
                     payload,
+                    candidates: {
+                        [hash]: payload,
+                    },
                 },
                 // place old transactions last
                 ...(chunk?.transactions ?? []),
@@ -60,17 +63,17 @@ export async function replaceRecentTransaction(
     address: string,
     oldHash: string,
     newHash: string,
-    newPayload?: JsonRpcPayload,
+    newPayload: JsonRpcPayload,
 ) {
     const now = new Date()
     const recordId = getRecordId(chainId, address)
     const chunk = await PluginDB.get('recent-transactions', recordId)
     const transaction = chunk?.transactions.find((x) => x.hash === oldHash)
     if (!transaction) throw new Error('Failed to find the old transaction.')
-    if (transaction.hash === newHash) return
-    transaction.replacements = {
-        ...transaction.replacements,
-        [newHash]: transaction.replacements?.[newHash] ?? newPayload,
+    if (transaction.candidates?.[newHash]) return
+    transaction.candidates = {
+        ...transaction.candidates,
+        [newHash]: newPayload,
     }
     await PluginDB.add({
         type: 'recent-transactions',

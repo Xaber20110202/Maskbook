@@ -122,15 +122,3 @@ export function toPayload(transaction: Transaction): JsonRpcPayload {
         ],
     }
 }
-
-export function toTransaction(receipt: TransactionReceipt): Transaction {
-    return {
-        blockHash: receipt.blockHash,
-        blockNumber: receipt.blockNumber,
-        from: receipt.from,
-        to: receipt.to,
-        gas: receipt.gasUsed,
-        hash: receipt.transactionHash,
-        value: receipt.
-    }
-}

@@ -3,9 +3,9 @@ import type { JsonRpcPayload } from 'web3-core-helpers'
 import { ChainId, getPayloadConfig, getReceiptStatus, TransactionStatusType } from '@masknet/web3-shared-evm'
 import {
     getSendTransactionComputedPayload,
-    getTransactionReceipt,
     watchTransaction,
     unwatchTransaction,
+    getTransactionReceiptHijacked,
 } from '../../../../extension/background-script/EthereumService'
 import * as database from './database'
 
@@ -20,8 +20,8 @@ export interface RecentTransaction {
     hash: string
     payload: JsonRpcPayload
     status: TransactionStatusType
+    candidates: Record<string, JsonRpcPayload>
     receipt?: TransactionReceipt | null
-    replacements?: Record<string, JsonRpcPayload>
     computedPayload?: UnboxPromise<ReturnType<typeof getSendTransactionComputedPayload>>
 }
 
@@ -64,31 +64,32 @@ export async function getRecentTransactions(
 ): Promise<RecentTransaction[]> {
     const transactions = await database.getRecentTransactions(chainId, address)
     const allSettled = await Promise.allSettled(
-        transactions.map<Promise<RecentTransaction>>(async ({ at, hash, payload, replacements = {} }) => {
+        transactions.map<Promise<RecentTransaction>>(async ({ at, hash, payload, candidates }) => {
             const tx: RecentTransaction = {
                 at,
                 hash,
                 payload,
                 status: getReceiptStatus(null),
                 receipt: null,
+                candidates,
             }
             const pairs = [
                 {
                     hash,
                     payload,
                 },
-                ...Object.entries(replacements).map(([hash, payload]) => ({ hash, payload })),
+                ...Object.entries(candidates).map(([hash, payload]) => ({ hash, payload })),
             ]
 
             try {
                 for await (const pair of pairs) {
-                    const receipt = await getTransactionReceipt(pair.hash)
-
+                    const receipt = await getTransactionReceiptHijacked(pair.hash)
                     if (!receipt) continue
 
                     tx.hash = pair.hash
                     tx.payload = pair.payload
                     tx.receipt = receipt
+                    break
                 }
             } catch {
                 // do nothing
