@@ -1,15 +1,17 @@
-import type { Transaction } from 'web3-core'
+import type { Transaction, TransactionReceipt } from 'web3-core'
 import type { JsonRpcPayload } from 'web3-core-helpers'
-import type { TransactionReceipt } from '@ethersproject/providers'
 import { WalletMessages } from '@masknet/plugin-wallet'
 import {
     EthereumMethodType,
+    getPayloadSignature,
+    getTransactionSignaure,
+    getTransactionState,
     isFinalState,
     isNextStateAvailable,
+    ProviderType,
     TransactionState,
     TransactionStateType,
 } from '@masknet/web3-shared-evm'
-import { getTransactionState } from '../../../../plugins/Wallet/services/transaction/helpers'
 import type { Context, Middleware } from '../types'
 
 interface TransactionProgress {
@@ -21,7 +23,7 @@ export class TransactionNotifier implements Middleware<Context> {
     private watched: Map<string, TransactionProgress> = new Map()
 
     private addProgress({ state, payload }: TransactionProgress) {
-        const progressId = helpers.getPayloadId(payload)
+        const progressId = getPayloadSignature(payload)
         if (!progressId) return
         if (this.watched.has(progressId)) return
 
@@ -34,10 +36,6 @@ export class TransactionNotifier implements Middleware<Context> {
 
     private removeProgress(progressId: string) {
         this.watched.delete(progressId)
-    }
-
-    private removeAllProgress() {
-        this.watched.clear()
     }
 
     private updateProgressState(progressId: string, state: TransactionState) {
@@ -58,12 +56,12 @@ export class TransactionNotifier implements Middleware<Context> {
     }
 
     private notifyPayloadProgress(payload: JsonRpcPayload, state: TransactionState) {
-        const progressId = helpers.getPayloadId(payload)
+        const progressId = getPayloadSignature(payload)
         this.notifyProgress(progressId, state)
     }
 
     private notifyTransactionProgress(transaction: Transaction, state: TransactionState) {
-        const progressId = helpers.getTransactionId(transaction)
+        const progressId = getTransactionSignaure(transaction)
         this.notifyProgress(progressId, state)
     }
 
@@ -71,12 +69,22 @@ export class TransactionNotifier implements Middleware<Context> {
         await next()
 
         switch (context.method) {
+            case EthereumMethodType.ETH_SEND_TRANSACTION:
+                this.addProgress({
+                    state: {
+                        type:
+                            context.providerType === ProviderType.MaskWallet
+                                ? TransactionStateType.UNKNOWN
+                                : TransactionStateType.WAIT_FOR_CONFIRMING,
+                    },
+                    payload: context.request,
+                })
+                break
             case EthereumMethodType.ETH_GET_TRANSACTION_BY_HASH:
                 {
                     const transaction = context.result as Transaction | undefined
-
                     if (transaction?.hash) {
-                        this.notifyProgress(transaction, {
+                        this.notifyProgress(getTransactionSignaure(transaction), {
                             type: TransactionStateType.HASH,
                             hash: transaction.hash,
                         })
@@ -86,9 +94,9 @@ export class TransactionNotifier implements Middleware<Context> {
             case EthereumMethodType.ETH_GET_TRANSACTION_RECEIPT:
                 const receipt = context.result as TransactionReceipt | undefined
                 const transaction = receipt as unknown as Transaction
-                if (receipt.transactionHash) {
+                if (receipt?.transactionHash) {
                     const state = getTransactionState(receipt)
-                    this.notifyProgress(transaction, state)
+                    this.notifyProgress(getTransactionSignaure(transaction), state)
                     WalletMessages.events.transactionStateUpdated.sendToAll(state)
                 }
                 break
