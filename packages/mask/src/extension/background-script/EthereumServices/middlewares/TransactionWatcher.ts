@@ -5,6 +5,9 @@ import {
     getExplorerConstants,
     getPayloadConfig,
     getPayloadFrom,
+    getPayloadSignature,
+    getTransactionSignaure,
+    toPayload,
 } from '@masknet/web3-shared-evm'
 import type { TransactionReceipt } from 'web3-core'
 import type { JsonRpcPayload } from 'web3-core-helpers'
@@ -12,7 +15,6 @@ import { Explorer } from '@masknet/web3-providers'
 import type { Context, Middleware } from '../types'
 import { getTransactionReceipt } from '../network'
 import { currentChainIdSettings } from '../../../../plugins/Wallet/settings'
-import { getPayloadId, getTransactionId, toPayload } from '../../../../plugins/Wallet/services/transaction/helpers'
 import { WalletRPC } from '../../../../plugins/Wallet/messages'
 
 interface StorageItem {
@@ -133,7 +135,8 @@ export class TransactionWatcher implements Middleware<Context> {
                     if (config?.nonce) return config.nonce === latestTransaction.nonce
 
                     // the transaction signature id exact matched
-                    if (getTransactionId(latestTransaction) === getPayloadId(transaction.payload)) return true
+                    if (getTransactionSignaure(latestTransaction) === getPayloadSignature(transaction.payload))
+                        return true
 
                     return false
                 }) ?? []

@@ -19,10 +19,10 @@ export function getPayloadId(payload: JsonRpcPayload) {
 
 export function getPayloadSignature(payload: JsonRpcPayload) {
     const config = getPayloadConfig(payload)
-    if (!config) return ''
+    if (!config) return
     const { from, to, data = '0x0', value = '0x0' } = config
-    if (!from || !to) return ''
-    return sha3([from, to, data, value].join('_')) ?? ''
+    if (!from || !to) return
+    return sha3([from, to, data, value].join('_')) ?? undefined
 }
 
 export function getPayloadFrom(payload: JsonRpcPayload) {
@@ -120,5 +120,17 @@ export function toPayload(transaction: Transaction): JsonRpcPayload {
                 nonce: transaction.nonce,
             },
         ],
+    }
+}
+
+export function toTransaction(receipt: TransactionReceipt): Transaction {
+    return {
+        blockHash: receipt.blockHash,
+        blockNumber: receipt.blockNumber,
+        from: receipt.from,
+        to: receipt.to,
+        gas: receipt.gasUsed,
+        hash: receipt.transactionHash,
+        value: receipt.
     }
 }

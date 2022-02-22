@@ -2,6 +2,9 @@ import { ChainId } from '@masknet/web3-shared-evm'
 import { Celo } from '../translators/Celo'
 import type { Context, Middleware, Translator as ChainTranslator } from '../types'
 
+/**
+ * JSON RPC transactor for EVM chains.
+ */
 export class Translator implements Middleware<Context> {
     private translators: Partial<Record<ChainId, ChainTranslator>> = {
         [ChainId.Celo]: new Celo(),
