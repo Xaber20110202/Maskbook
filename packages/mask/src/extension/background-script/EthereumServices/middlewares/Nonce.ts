@@ -131,15 +131,20 @@ export class Nonce implements Middleware<Context> {
 
         await next()
 
-        // if a transaction hash was received then commit the nonce
-        // else if a nonce error was occurred then reset the nonce
-        if (context.method !== EthereumMethodType.ETH_SEND_TRANSACTION) return
+        if (
+            ![EthereumMethodType.ETH_SEND_TRANSACTION, EthereumMethodType.ETH_SEND_RAW_TRANSACTION].includes(
+                context.method,
+            )
+        )
+            return
 
         const message = context.error?.message ?? ''
         const isGeneralErrorNonce = /\bnonce|transaction\b/im.test(message) && /\b(low|high|old)\b/im.test(message)
         const isAuroraErrorNonce = message.includes('ERR_INCORRECT_NONCE')
 
+        // if a transaction hash was received then commit the nonce
         if (isGeneralErrorNonce || isAuroraErrorNonce) await this.resetNonce(context.account)
+        // else if a nonce error was occurred then reset the nonce
         else if (!context.error && typeof context.result === 'string') await this.commitNonce(context.account)
     }
 }
