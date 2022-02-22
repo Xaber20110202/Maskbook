@@ -139,14 +139,14 @@ export class TransactionWatcher implements Middleware<Context> {
 
             if (!watchedHash || watchedHash === latestTransaction.hash) continue
 
-            // update recent transaction
-            await WalletRPC.replaceRecentTransaction(
-                chainId,
-                account,
-                watchedHash,
-                latestTransaction.hash,
-                toPayload(latestTransaction),
-            )
+            // // update recent transaction
+            // await WalletRPC.replaceRecentTransaction(
+            //     chainId,
+            //     account,
+            //     watchedHash,
+            //     latestTransaction.hash,
+            //     toPayload(latestTransaction),
+            // )
         }
     }
 
@@ -156,11 +156,6 @@ export class TransactionWatcher implements Middleware<Context> {
 
         // unwatch legacy transactions
         this.storage.getUnwatched(chainId).forEach(([hash]) => this.unwatchTransaction(chainId, hash))
-
-        // update limits
-        this.storage.getWatched(chainId).forEach(([hash, transaction]) => {
-            this.storage.setItem(chainId, hash, transaction)
-        })
 
         try {
             await this.checkReceipt(chainId)
@@ -211,13 +206,13 @@ export class TransactionWatcher implements Middleware<Context> {
             case EthereumMethodType.MASK_WATCH_TRANSACTION: {
                 const [hash, payload] = context.request.params as [string, JsonRpcPayload]
                 this.watchTransaction(context.chainId, hash, payload)
-                context.write(null)
+                context.write()
                 break
             }
             case EthereumMethodType.MASK_UNWATCH_TRANSACTION: {
                 const [hash] = context.request.params as [string]
                 this.unwatchTransaction(context.chainId, hash)
-                context.write(null)
+                context.write()
                 break
             }
 
@@ -227,7 +222,7 @@ export class TransactionWatcher implements Middleware<Context> {
                     const [hash] = context.request.params as [string]
                     context.end(await this.getReceiptFromCache(context.chainId, hash))
                 } catch {
-                    context.write(null)
+                    context.write()
                 }
                 break
 

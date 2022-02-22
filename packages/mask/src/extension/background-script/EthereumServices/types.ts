@@ -74,7 +74,7 @@ export interface Context {
     /**
      * Write RPC response into the context but only allow to call once.
      */
-    write: (error: Error | null, result?: unknown) => void
+    write: (error?: Error | null, result?: unknown) => void
 
     /**
      * Register a callback which will be called once the context is written with a response.

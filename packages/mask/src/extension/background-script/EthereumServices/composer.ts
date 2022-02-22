@@ -179,7 +179,7 @@ class RequestContext implements Context {
         this.write(null, result)
     }
 
-    write(error: Error | null, result?: unknown) {
+    write(error: Error | null = null, result?: unknown) {
         if (!this.writeable) return
         this.writeable = false
         this.error = error
